@@ -3,35 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Força de Coriolis - Disco Giratório</title>
+    <title>Força de Coriolis (Corrigido)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
     <style>
         body {
             margin: 0;
-            padding: 0;
+            padding: 10px;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             background-color: #f0f0f0;
             font-family: Arial, sans-serif;
+            touch-action: manipulation;
         }
         #sketch-holder {
             text-align: center;
+            width: 100%;
         }
         .controls {
-            margin-top: 20px;
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
         button {
-            padding: 8px 16px;
-            margin: 0 5px;
+            padding: 10px;
+            font-size: 14px;
+            border: none;
+            background: #6200ea;
+            color: white;
+            border-radius: 5px;
             cursor: pointer;
+        }
+        h2 {
+            font-size: 18px;
+            margin-bottom: 10px;
         }
     </style>
 </head>
 <body>
     <div id="sketch-holder">
-        <h2>Força de Coriolis em um Disco Giratório</h2>
+        <h2>Força de Coriolis (Reação Imediata)</h2>
         <div class="controls">
             <button onclick="toggleRotation()">Iniciar/Parar Disco</button>
             <button onclick="resetBall()">Reiniciar Bolinha</button>
@@ -45,73 +58,78 @@
         let ball;
         let ballVelocity;
         let ballOnDisk = false;
+        let canvasSize;
 
         function setup() {
-            let canvas = createCanvas(500, 500);
+            canvasSize = min(windowWidth - 20, windowHeight - 150);
+            let canvas = createCanvas(canvasSize, canvasSize);
             canvas.parent('sketch-holder');
-            ball = createVector(width / 2, height / 2 - 100);
-            ballVelocity = createVector(2, 0);
+            resetBall();
         }
 
         function draw() {
             background(240);
             translate(width / 2, height / 2);
 
-            // Desenha o disco giratório
+            // Disco giratório
             fill(200, 200, 255);
             noStroke();
-            ellipse(0, 0, 400, 400);
+            ellipse(0, 0, canvasSize * 0.8, canvasSize * 0.8);
 
-            // Rotaciona o disco se estiver ativado
+            // Rotação do disco
             if (isRotating) {
                 angle += rotationSpeed;
             }
 
-            // Desenha linhas de referência (fixas no espaço inercial)
+            // Linhas de referência (fixas no espaço inercial)
             stroke(0);
-            line(-200, 0, 200, 0);
-            line(0, -200, 0, 200);
+            line(-canvasSize * 0.4, 0, canvasSize * 0.4, 0);
+            line(0, -canvasSize * 0.4, 0, canvasSize * 0.4);
 
-            // Desenha a bolinha
-            push();
-            if (isRotating) {
-                rotate(angle);
-            }
-            fill(255, 0, 0);
-            noStroke();
-            ellipse(ball.x - width / 2, ball.y - height / 2, 20, 20);
-            pop();
-
-            // Atualiza a posição da bolinha (movimento retilíneo inercial)
+            // Bolinha (sempre afetada pela rotação se estiver no disco)
             if (ballOnDisk) {
-                ball.add(ballVelocity);
+                push();
+                if (isRotating) {
+                    rotate(angle);
+                }
+                fill(255, 0, 0);
+                noStroke();
+                ellipse(ball.x - width / 2, ball.y - height / 2, 15, 15);
+                pop();
 
-                // Se a bolinha sair do disco, reinicia
-                if (dist(ball.x, ball.y, width / 2, height / 2) > 200) {
+                // Movimento da bolinha (agora sempre ativo)
+                ball.add(ballVelocity);
+                if (dist(ball.x, ball.y, width / 2, height / 2) > canvasSize * 0.4) {
                     resetBall();
                 }
             }
 
-            // Mostra informações
+            // Texto de status
             fill(0);
             noStroke();
-            textSize(16);
-            text("Disco " + (isRotating ? "Girando (Coriolis ativa)" : "Parado (Sem Coriolis)"), -200, -220);
+            textSize(12);
+            textAlign(CENTER);
+            text("Disco: " + (isRotating ? "GIRANDO (Coriolis ativa)" : "PARADO"), 0, -canvasSize * 0.45);
         }
 
         function toggleRotation() {
             isRotating = !isRotating;
+            // Se a bolinha não estava ativa, inicia ao girar o disco
+            if (!ballOnDisk) {
+                resetBall();
+            }
         }
 
         function resetBall() {
-            ball = createVector(width / 2, height / 2 - 100);
+            ball = createVector(width / 2, height / 2 - canvasSize * 0.2);
+            ballVelocity = createVector(1.5, 0);
             ballOnDisk = true;
         }
 
-        function mousePressed() {
-            if (!ballOnDisk) {
-                ballOnDisk = true;
-            }
+        function windowResized() {
+            canvasSize = min(windowWidth - 20, windowHeight - 150);
+            resizeCanvas(canvasSize, canvasSize);
+            resetBall();
         }
     </script>
 </body>
